@@ -118,10 +118,14 @@ public:
 
     std::vector<double> listSampleRates( const int direction, const size_t channel ) const;
 
+    double getSampleRate(const int dir, const size_t channel) const;
+
 private:
 	SoapySDR::Stream* const RX_STREAM = (SoapySDR::Stream*) 0x1;
 
     SoapySDR::Kwargs _creation_args;
     struct libusb_device_descriptor _libusb_desc;
     libusb_device_handle *_libusb_handle;
+
+    double _current_sample_rate;
 };

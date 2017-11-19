@@ -1,5 +1,8 @@
 #include "SoapyFX3.hpp"
 
+#include <algorithm>
+#include <iostream>
+
 static const uint32_t fx3_vid = 0x04B4;
 static const uint32_t fx3_pid = 0x00F1;
 
@@ -100,6 +103,8 @@ SoapyFX3::SoapyFX3( const SoapySDR::Kwargs & args ) {
     if(_libusb_handle == NULL) {
 		throw std::runtime_error( "libusb failed to open Cypress FX3 device" );
     }
+
+    _current_sample_rate = 10E6;
 }
 
 SoapyFX3::~SoapyFX3( void ) {
@@ -148,15 +153,15 @@ std::vector<std::string> SoapyFX3::getStreamFormats(const int, const size_t) con
 {
 	std::vector<std::string> formats;
 
-	formats.push_back(SOAPY_SDR_U32);
+	formats.push_back(SOAPY_SDR_CF32);
 
 	return formats;
 }
 
 std::string SoapyFX3::getNativeStreamFormat(const int, const size_t, double &fullScale) const
 {
-    fullScale = double((uint32_t)0xFFFFFFFF);
-    return SOAPY_SDR_U32;
+    fullScale = 1E6;
+    return SOAPY_SDR_CF32;
 }
 
 SoapySDR::Stream *SoapyFX3::setupStream(
@@ -165,6 +170,7 @@ SoapySDR::Stream *SoapyFX3::setupStream(
 	const std::vector<size_t> &channels,
 	const SoapySDR::Kwargs &args )
 {
+    std::cerr << "FX3 setupStream with type: " << format << std::endl;
     return RX_STREAM;
 }
 
@@ -176,7 +182,7 @@ void SoapyFX3::closeStream(SoapySDR::Stream *stream)
 size_t SoapyFX3::getStreamMTU(SoapySDR::Stream *) const
 {
     //provide a non-zero default when the implementation does not overload the MTU
-    return 1024;
+    return 4096;
 }
 
 int SoapyFX3::activateStream(SoapySDR::Stream *stream,
@@ -203,7 +209,11 @@ int SoapyFX3::readStream(
 	long long &timeNs,
 	const long timeoutUs )
 {
+    for(int i = 0; i < numElems*2; i += 2) {
+        ((float*)buffs[0])[i] = (float)(i % 10) / 1000.0;
+    }
 
+    /*
     int numBytes = numElems*4;
     int received = 0;
 
@@ -217,6 +227,7 @@ int SoapyFX3::readStream(
     } else {
         return 0;
     }
+    */
 
     return numElems;
 }
@@ -279,7 +290,16 @@ std::vector<double> SoapyFX3::listSampleRates(const int, const size_t) const
     return rates;
 }
 
-void SoapyFX3::setSampleRate(const int, const size_t, const double)
+void SoapyFX3::setSampleRate(const int dir, const size_t channel, const double rate)
 {
-    return;
+    std::vector<double> possible_rates = listSampleRates(dir, channel);
+
+    if( std::find(possible_rates.begin(), possible_rates.end(), rate) != possible_rates.end() ) {
+        _current_sample_rate = rate;
+    }
+}
+
+double SoapyFX3::getSampleRate(const int dir, const size_t channel) const
+{
+    return _current_sample_rate;
 }
