@@ -165,7 +165,7 @@ SoapySDR::Stream *SoapyFX3::setupStream(
 	const std::vector<size_t> &channels,
 	const SoapySDR::Kwargs &args )
 {
-    return nullptr;
+    return RX_STREAM;
 }
 
 void SoapyFX3::closeStream(SoapySDR::Stream *stream)
@@ -203,7 +203,22 @@ int SoapyFX3::readStream(
 	long long &timeNs,
 	const long timeoutUs )
 {
-    return SOAPY_SDR_NOT_SUPPORTED;
+
+    int numBytes = numElems*4;
+    int received = 0;
+
+    if( libusb_bulk_transfer(_libusb_handle,
+                             0x81,
+                             ((uint8_t*)(buffs[0])),
+                             numBytes,
+                             &received,
+                             timeoutUs/1000) == 0 ) {
+        return received;
+    } else {
+        return 0;
+    }
+
+    return numElems;
 }
 
 /*******************************************************************
