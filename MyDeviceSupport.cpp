@@ -18,6 +18,15 @@ SoapySDR::KwargsList findMyDevice(const SoapySDR::Kwargs &args)
 {
     //locate the device on the system...
     //return a list of 0, 1, or more argument maps that each identify a device
+
+    SoapySDR::KwargsList results;
+
+    SoapySDR::Kwargs arg1;
+    arg1["thing"] = "derp";
+
+    results.push_back(arg1);
+
+    return results;
 }
 
 /***********************************************************************
@@ -27,7 +36,7 @@ SoapySDR::Device *makeMyDevice(const SoapySDR::Kwargs &args)
 {
     //create an instance of the device object given the args
     //here we will translate args into something used in the constructor
-    return new MyDevice(...);
+    return new MyDevice;
 }
 
 /***********************************************************************
