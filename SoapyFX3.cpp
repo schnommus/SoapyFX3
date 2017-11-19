@@ -1,30 +1,4 @@
-#include <SoapySDR/Device.hpp>
-#include <SoapySDR/Registry.hpp>
-
-#include <libusb-1.0/libusb.h>
-
-#include <string>
-#include <iomanip>
-
-template< typename T >
-std::string int_to_hex( T i )
-{
-  std::stringstream stream;
-  stream << "0x" 
-         << std::setfill ('0') << std::setw(sizeof(T)*2) 
-         << std::hex << i;
-  return stream.str();
-}
-
-/***********************************************************************
- * Device interface
- **********************************************************************/
-class SoapyFX3 : public SoapySDR::Device
-{
-    //Implement constructor with device specific arguments...
-
-    //Implement all applicable virtual methods from SoapySDR::Device
-};
+#include "SoapyFX3.hpp"
 
 static const uint32_t fx3_vid = 0x04B4;
 static const uint32_t fx3_pid = 0x00F1;
@@ -32,6 +6,7 @@ static const uint32_t fx3_pid = 0x00F1;
 /***********************************************************************
  * Find available devices
  **********************************************************************/
+
 SoapySDR::KwargsList findSoapyFX3(const SoapySDR::Kwargs &args)
 {
     //locate the device on the system...
@@ -73,14 +48,161 @@ SoapySDR::KwargsList findSoapyFX3(const SoapySDR::Kwargs &args)
 /***********************************************************************
  * Make device instance
  **********************************************************************/
+
 SoapySDR::Device *makeSoapyFX3(const SoapySDR::Kwargs &args)
 {
     //create an instance of the device object given the args
     //here we will translate args into something used in the constructor
-    return new SoapyFX3;
+    return new SoapyFX3(args);
 }
 
 /***********************************************************************
  * Registration
  **********************************************************************/
+
 static SoapySDR::Registry registerSoapyFX3("cypress_fx3", &findSoapyFX3, &makeSoapyFX3, SOAPY_SDR_ABI_VERSION);
+
+/*******************************************************************
+ * Instance Construction
+ ******************************************************************/
+
+SoapyFX3::SoapyFX3( const SoapySDR::Kwargs & args ) {
+    _creation_args = args;
+}
+
+SoapyFX3::~SoapyFX3( void ) {
+}
+
+/*******************************************************************
+ * Identification API
+ ******************************************************************/
+
+std::string SoapyFX3::getDriverKey(void) const
+{
+    return "CypressFX3";
+}
+
+std::string SoapyFX3::getHardwareKey(void) const
+{
+    const std::string bus = _creation_args.at("idBus");
+    const std::string addr = _creation_args.at("idBusAddress");
+    return std::string("[BUS:") + bus + std::string("][ADDR:") + addr + std::string("]");
+}
+
+/*******************************************************************
+ * Channels API
+ ******************************************************************/
+
+size_t SoapyFX3::getNumChannels(const int) const
+{
+    return 1;
+}
+
+bool SoapyFX3::getFullDuplex(const int, const size_t) const
+{
+    return false;
+}
+
+/*******************************************************************
+ * Stream API
+ ******************************************************************/
+
+std::vector<std::string> SoapyFX3::getStreamFormats(const int, const size_t) const
+{
+    return std::vector<std::string>();
+}
+
+std::string SoapyFX3::getNativeStreamFormat(const int, const size_t, double &fullScale) const
+{
+    fullScale = double(1 << 15);
+    return SOAPY_SDR_CS16;
+}
+
+SoapySDR::Stream *SoapyFX3::setupStream(const int, const std::string &, const std::vector<size_t> &, const SoapySDR::Kwargs &)
+{
+    return nullptr;
+}
+
+void SoapyFX3::closeStream(SoapySDR::Stream *)
+{
+    return;
+}
+
+size_t SoapyFX3::getStreamMTU(SoapySDR::Stream *) const
+{
+    //provide a non-zero default when the implementation does not overload the MTU
+    return 1024;
+}
+
+int SoapyFX3::activateStream(SoapySDR::Stream *, const int flags, const long long, const size_t)
+{
+    return (flags == 0)? 0 : SOAPY_SDR_NOT_SUPPORTED;
+}
+
+int SoapyFX3::deactivateStream(SoapySDR::Stream *, const int flags, const long long)
+{
+    return (flags == 0)? 0 : SOAPY_SDR_NOT_SUPPORTED;
+}
+
+int SoapyFX3::readStream(SoapySDR::Stream *, void * const *, const size_t, int &, long long &, const long)
+{
+    return SOAPY_SDR_NOT_SUPPORTED;
+}
+
+/*******************************************************************
+ * Gain API
+ ******************************************************************/
+
+std::vector<std::string> SoapyFX3::listGains(const int, const size_t) const
+{
+    return std::vector<std::string>();
+}
+
+void SoapyFX3::setGain(const int, const size_t, const std::string &, const double)
+{
+    return;
+}
+
+SoapySDR::Range SoapyFX3::getGainRange(const int, const size_t, const std::string &) const
+{
+    return SoapySDR::Range(0.0, 0.0);
+}
+
+/*******************************************************************
+ * Frequency API
+ ******************************************************************/
+
+std::vector<std::string> SoapyFX3::listFrequencies(const int, const size_t) const
+{
+    return std::vector<std::string>();
+}
+
+void SoapyFX3::setFrequency(const int, const size_t, const std::string &, const double, const SoapySDR::Kwargs &)
+{
+    return;
+}
+
+SoapySDR::RangeList SoapyFX3::getFrequencyRange(const int, const size_t, const std::string &) const
+{
+    return SoapySDR::RangeList();
+}
+
+/*******************************************************************
+ * Sample Rate API
+ ******************************************************************/
+
+std::vector<double> SoapyFX3::listSampleRates(const int, const size_t) const
+{
+    std::vector<double> rates;
+
+    rates.push_back(10E6);
+    rates.push_back(20E6);
+    rates.push_back(30E6);
+
+    return rates;
+}
+
+void SoapyFX3::setSampleRate(const int, const size_t, const double)
+{
+    return;
+}
