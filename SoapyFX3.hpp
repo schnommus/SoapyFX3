@@ -120,4 +120,6 @@ public:
 
 private:
     SoapySDR::Kwargs _creation_args;
+    struct libusb_device_descriptor _libusb_desc;
+    libusb_device_handle *_libusb_handle;
 };
