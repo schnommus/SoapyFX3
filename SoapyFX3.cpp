@@ -159,12 +159,16 @@ std::string SoapyFX3::getNativeStreamFormat(const int, const size_t, double &ful
     return SOAPY_SDR_U32;
 }
 
-SoapySDR::Stream *SoapyFX3::setupStream(const int, const std::string &, const std::vector<size_t> &, const SoapySDR::Kwargs &)
+SoapySDR::Stream *SoapyFX3::setupStream(
+	const int direction,
+	const std::string &format,
+	const std::vector<size_t> &channels,
+	const SoapySDR::Kwargs &args )
 {
     return nullptr;
 }
 
-void SoapyFX3::closeStream(SoapySDR::Stream *)
+void SoapyFX3::closeStream(SoapySDR::Stream *stream)
 {
     return;
 }
@@ -175,17 +179,29 @@ size_t SoapyFX3::getStreamMTU(SoapySDR::Stream *) const
     return 1024;
 }
 
-int SoapyFX3::activateStream(SoapySDR::Stream *, const int flags, const long long, const size_t)
+int SoapyFX3::activateStream(SoapySDR::Stream *stream,
+	const int flags,
+	const long long timeNs,
+	const size_t numElems )
 {
     return (flags == 0)? 0 : SOAPY_SDR_NOT_SUPPORTED;
 }
 
-int SoapyFX3::deactivateStream(SoapySDR::Stream *, const int flags, const long long)
+int SoapyFX3::deactivateStream(
+	SoapySDR::Stream *stream,
+	const int flags,
+	const long long timeNs )
 {
     return (flags == 0)? 0 : SOAPY_SDR_NOT_SUPPORTED;
 }
 
-int SoapyFX3::readStream(SoapySDR::Stream *, void * const *, const size_t, int &, long long &, const long)
+int SoapyFX3::readStream(
+	SoapySDR::Stream *stream,
+	void * const *buffs,
+	const size_t numElems,
+	int &flags,
+	long long &timeNs,
+	const long timeoutUs )
 {
     return SOAPY_SDR_NOT_SUPPORTED;
 }
