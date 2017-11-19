@@ -209,27 +209,34 @@ int SoapyFX3::readStream(
 	long long &timeNs,
 	const long timeoutUs )
 {
+    /*
+    // Generate sawtooths (testing)
     for(int i = 0; i < numElems*2; i += 2) {
         ((float*)buffs[0])[i] = (float)(i % 10) / 1000.0;
     }
+    */
 
-    /*
-    int numBytes = numElems*4;
+    int numBytes = numElems*4; // One uint32_t per complex float pair
     int received = 0;
 
     if( libusb_bulk_transfer(_libusb_handle,
                              0x81,
-                             ((uint8_t*)(buffs[0])),
+                             (uint8_t*)&_receive_buffer,
                              numBytes,
                              &received,
-                             timeoutUs/1000) == 0 ) {
-        return received;
+                             1) == 0 ) {
+
+        int received_elems = received/4;
+
+        for(int i = 0; i < received_elems; ++i) {
+            // Populate real parts only
+            ((float*)buffs[0])[i*2] = (float)_receive_buffer[i] / 1E6;
+        }
+
+        return received_elems;
     } else {
         return 0;
     }
-    */
-
-    return numElems;
 }
 
 /*******************************************************************
@@ -283,6 +290,7 @@ std::vector<double> SoapyFX3::listSampleRates(const int, const size_t) const
 {
     std::vector<double> rates;
 
+    rates.push_back(1E6);
     rates.push_back(10E6);
     rates.push_back(20E6);
     rates.push_back(30E6);

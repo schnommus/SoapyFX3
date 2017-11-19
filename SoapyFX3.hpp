@@ -128,4 +128,8 @@ private:
     libusb_device_handle *_libusb_handle;
 
     double _current_sample_rate;
+
+    static const uint32_t _receive_buffer_size = 4096;
+
+    uint32_t _receive_buffer[_receive_buffer_size];
 };
